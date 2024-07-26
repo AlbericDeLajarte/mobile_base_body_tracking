@@ -1,7 +1,8 @@
 # mobile_base_body_tracking
 
 ## Description
-A simple repo to estimate the full pose of an ArUco marker and drive an omniwheel mobile base
+This repository is used to control the position of a mobile base by following the motion of a human.
+It contains code to track an ArUco marker and a simple linear controller to drive an omniwheel mobile base.
 
 ## Installation
 ```
