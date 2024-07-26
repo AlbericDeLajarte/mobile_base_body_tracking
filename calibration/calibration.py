@@ -45,7 +45,7 @@ image_points = []
 def main():
       
     # Get the file path for images in the current directory
-    images = glob.glob('calibration/*.png')
+    images = glob.glob('*.png')
     print(f'Found {len(images)} images')
         
     # Go through each chessboard image, one by one

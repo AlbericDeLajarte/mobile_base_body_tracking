@@ -73,11 +73,6 @@ def main():
   """
   Main method of the program.
   """
-  # Check that we have a valid ArUco marker
-  if ARUCO_DICT.get(aruco_dictionary_name, None) is None:
-    print("[INFO] ArUCo tag of '{}' is not supported".format(
-      args["type"]))
-    sys.exit(0)
  
   # Load the camera parameters from the saved file
   cv_file = cv2.FileStorage(
@@ -87,9 +82,7 @@ def main():
   cv_file.release()
      
   # Load the ArUco dictionary
-  print("[INFO] detecting '{}' markers...".format(
-    aruco_dictionary_name))
-  this_aruco_dictionary = cv2.aruco.Dictionary_get(ARUCO_DICT[aruco_dictionary_name])
+  this_aruco_dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50,)
   this_aruco_parameters = cv2.aruco.DetectorParameters_create()
    
   # Start the video stream

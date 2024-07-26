@@ -21,7 +21,7 @@ while True:
         break
     elif k%256 == 32:
         # SPACE pressed
-        img_name = os.path.join('calibration', f'img_{img_counter}.png')
+        img_name = f'img_{img_counter}.png'
         cv2.imwrite(img_name, frame)
         print("{} written!".format(img_name))
         img_counter += 1
