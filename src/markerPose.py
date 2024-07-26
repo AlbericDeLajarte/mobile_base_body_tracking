@@ -6,6 +6,20 @@ from scipy.spatial.transform import Slerp
 
 class MarkerPose():
 
+    '''
+    Marker pose class
+
+    args:
+    camera_calibration: str, path to the camera calibration file
+    marker_len: float, length of the ArUco marker [m]
+    alpha: float, exponential average factor
+
+    return:
+    marker_position: np.array, position of the ArUco marker [m]
+    marker_orientation: np.array, orientation of the ArUco marker [quaternion]
+
+    '''
+
     def __init__(self, camera_calibration: str, marker_len: float, alpha : float = 0.9) -> None:
 
         self.marker_len = marker_len
@@ -36,7 +50,7 @@ class MarkerPose():
         self.camera2robot = R.from_euler('x', -90, degrees=True) * R.from_euler('y', -90, degrees=True)
 
 
-    def get_marker_pose(self):
+    def get_marker_pose(self) -> tuple:
 
         ret, frame = self.cap.read()  
      
@@ -102,6 +116,10 @@ class MarkerPose():
             del self.orientation_calibrations
 
         return False
+    
+
+    def __del__(self):
+        self.cap.release()
 
         
 
