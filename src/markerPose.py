@@ -87,7 +87,9 @@ class MarkerPose():
 
 
 
-        return (self.marker_position, self.marker_orientation)
+            return (self.marker_position, self.marker_orientation)
+
+        else: return (np.zeros(3), np.array([0, 0, 0, 1]))
             
 
     def run_calibration(self, new_position, new_rotation) -> bool:  
