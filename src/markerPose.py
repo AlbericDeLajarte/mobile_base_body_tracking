@@ -49,6 +49,9 @@ class MarkerPose():
 
         self.camera2robot = R.from_euler('x', -90, degrees=True) * R.from_euler('y', -90, degrees=True)
 
+        self.lost_signal = 0
+        self.max_lost_signal = 10
+
 
     def get_marker_pose(self) -> tuple:
 
@@ -62,6 +65,8 @@ class MarkerPose():
         
         # Check that at least one ArUco marker was detected
         if marker_ids is not None:
+
+            self.lost_signal = 0
             
             # Estimate the pose of the detected marker
             rvecs, tvecs, obj_points = cv2.aruco.estimatePoseSingleMarkers( corners,
@@ -89,7 +94,12 @@ class MarkerPose():
 
             return (self.marker_position, self.marker_orientation)
 
-        else: return (np.zeros(3), np.array([0, 0, 0, 1]))
+        else: 
+            if self.lost_signal < self.max_lost_signal:
+                self.lost_signal += 1
+                return (self.marker_position, self.marker_orientation)
+            else:
+                return (np.zeros(3), np.array([0, 0, 0, 1]))
             
 
     def run_calibration(self, new_position, new_rotation) -> bool:  

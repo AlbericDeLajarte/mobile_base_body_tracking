@@ -22,4 +22,5 @@ python webcam_photo.py
 Then run the script `calibration.py` to compute the calibration matrix and save it in `calibration_chessboard.yaml`
 
 ## Run
+sudo ip link set can0 up type can bitrate 500000
 Just run the script `run.py` to get the pose of the marker `ARUCO.pdf` and compute target velocity
