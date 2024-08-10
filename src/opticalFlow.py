@@ -9,7 +9,7 @@ class OpticalFlow():
 
     def __init__(self, alpha=1) -> None:
         
-        self.ser = serial.Serial('/dev/tty.usbserial-0001', 115200)
+        self.ser = serial.Serial('/dev/ttyUSB0', 115200)
 
         self.alpha = alpha  
 
@@ -45,8 +45,8 @@ class OpticalFlow():
             if message_MSP[function_message] == 'MSP2_SENSOR_OPTIC_FLOW':
                 assert payload_length == 9, "Payload length of optic flow is not 12"
                 quality = struct.unpack('<B', payload[:1])[0]
-                posX = struct.unpack('<i', payload[1:5])[0]/1000.0
-                posY = -struct.unpack('<i', payload[5:])[0]/1000.0
+                posY = -struct.unpack('<i', payload[1:5])[0]/1000.0
+                posX = -struct.unpack('<i', payload[5:])[0]/1000.0
                 # print(f'Quality: {quality}, posX: {posX}, posY: {posY}')
                 self.velocity[:2] = self.alpha*np.array([posX, posY]) + (1-self.alpha)*self.velocity[:2]
             

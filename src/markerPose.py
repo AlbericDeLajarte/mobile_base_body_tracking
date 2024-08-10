@@ -63,6 +63,8 @@ class MarkerPose():
                                                                     parameters=self.this_aruco_parameters,
                                                                     cameraMatrix=self.mtx, distCoeff=self.dst)
         
+        del frame
+        
         # Check that at least one ArUco marker was detected
         if marker_ids is not None:
 
