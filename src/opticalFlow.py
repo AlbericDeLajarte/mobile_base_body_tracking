@@ -7,18 +7,19 @@ message_MSP = {0x1F01: 'MSP2_SENSOR_RANGEFINDER',
 
 class OpticalFlow():
 
-    def __init__(self, alpha=1) -> None:
+    def __init__(self, path_device: str, baud_rate : int = 115200, alpha=1) -> None:
         
-        self.ser = serial.Serial('/dev/ttyUSB0', 115200)
+        self.ser = serial.Serial(path_device, baud_rate)
 
         self.alpha = alpha  
 
-        self.velocity = np.zeros(3)
+        self.velocity = np.zeros(2)
+        self.altitude = 0
 
 
-    def get_pose(self):
+    def update(self):
 
-        # Read the contents of the serial port (we don't know how many bytes)
+        # Read the contents of the serial port until we find the header
         buffer = ''
         while buffer != b'$': buffer = self.ser.read(1)
         x = self.ser.read()
@@ -26,6 +27,7 @@ class OpticalFlow():
             print(x)
             return
 
+        # Parse the data
         receive_mode = self.ser.read(1)
         flag = self.ser.read(1)
         function_message = struct.unpack('<H', self.ser.read(2))[0]
@@ -40,21 +42,17 @@ class OpticalFlow():
                 quality = struct.unpack('<B', payload[:1])[0]
                 posZ = struct.unpack('<i', payload[1:])[0]/1000.0
                 # print(f'Quality: {quality}, posZ: {posZ}')
-                self.velocity[2] = self.alpha*posZ + (1-self.alpha)*self.velocity[2]
+                self.altitude = self.alpha*posZ + (1-self.alpha)*self.altitude
             
             if message_MSP[function_message] == 'MSP2_SENSOR_OPTIC_FLOW':
                 assert payload_length == 9, "Payload length of optic flow is not 12"
                 quality = struct.unpack('<B', payload[:1])[0]
-                posY = -struct.unpack('<i', payload[1:5])[0]/1000.0
-                posX = -struct.unpack('<i', payload[5:])[0]/1000.0
+                speedY = -struct.unpack('<i', payload[1:5])[0]/100.0
+                speedX = -struct.unpack('<i', payload[5:])[0]/100.0
                 # print(f'Quality: {quality}, posX: {posX}, posY: {posY}')
-                self.velocity[:2] = self.alpha*np.array([posX, posY]) + (1-self.alpha)*self.velocity[:2]
+                self.velocity = self.alpha*np.array([speedX, speedY]) + (1-self.alpha)*self.velocity
             
             # print(f"Time {time.time()-t0}, Quality: {quality}, Position: {position}")
         else:
             print(function_message, payload)
 
-
-        return self.velocity
-
-        
