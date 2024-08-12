@@ -30,17 +30,18 @@ class Estimator2D:
         self.sensor_data.acceleration = self.manager.list([0.0, 0.0, 1.0])
         self.sensor_data.angular_velocity = self.manager.list([0.0, 0.0, 0.0])
         self.sensor_data.quaternion = self.manager.list([0.0, 0.0, 0.0, 1.0])
-        self.sensor_data.optical_flow = self.manager.list([0.0, 0.0])
+        self.sensor_data.optical_flow = self.manager.list([0.0, 0.0, 0.0]) # vx, vy, height
         self.sensor_data.update_opticalFlow = self.manager.Value('i', 0)
 
         # State vector
         self.linear_acceleration = np.zeros(3)
         self.angular_velocity = np.zeros(3)
         self.quaternion = np.array([0.0, 0.0, 0.0, 1.0])
-        self.optical_flow = np.zeros(2)
+        self.optical_flow = np.zeros(3)
         self.kalman_state = np.zeros(4)
 
-        self.time = time.time()
+        self.time = 0.0
+        self.t0 = time.time()
 
 
         # Start processes
@@ -54,13 +55,13 @@ class Estimator2D:
     def update_state(self):
         
         # Update time
-        new_time = time.time()
+        new_time = time.time() - self.t0
         dt = new_time - self.time
         self.time = new_time
 
         # Update IMU
         self.linear_acceleration = np.array(self.sensor_data.acceleration)*self.gravity[2]
-        self.angular_velocity = np.array(self.sensor_data.angular_velocity)
+        self.angular_velocity = np.deg2rad(self.sensor_data.angular_velocity)
         self.quaternion = np.array(self.sensor_data.quaternion)
 
         # Rotate the acceleration to the world frame
@@ -72,12 +73,18 @@ class Estimator2D:
 
         # Update Optical Flow
         if self.sensor_data.update_opticalFlow:
+            angle_vertical = np.arccos(r.as_matrix()[2, 2])
             self.optical_flow = np.array(self.sensor_data.optical_flow)
-            self.kf.update(self.optical_flow)
-            
+
+            self.optical_flow[2] = self.optical_flow[2]*np.cos(angle_vertical)
+            self.optical_flow[:2] *= 2.8*self.optical_flow[2] # experimental calibration
+
+            self.optical_flow[0] -= (self.angular_velocity[1]*self.optical_flow[2] - self.angular_velocity[2]*0.33)
+            self.optical_flow[1] += self.angular_velocity[0]*self.optical_flow[2]
+
+            self.kf.update(self.optical_flow[:2])
+
             self.sensor_data.update_opticalFlow = 0
-
-
 
 
     def stop(self):
@@ -102,6 +109,7 @@ def optical_flow_update(path_optical_flow, sensor_data):
         optical_flow = OpticalFlow(path_optical_flow, alpha=0.9)
         while True:
             optical_flow.update()
-            sensor_data.optical_flow[:] = optical_flow.velocity.tolist()
+            sensor_data.optical_flow[:2] = optical_flow.velocity.tolist()
+            sensor_data.optical_flow[2] = optical_flow.altitude
             sensor_data.update_opticalFlow = 1
 

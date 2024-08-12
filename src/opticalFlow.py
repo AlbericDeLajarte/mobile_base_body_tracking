@@ -42,14 +42,14 @@ class OpticalFlow():
                 quality = struct.unpack('<B', payload[:1])[0]
                 posZ = struct.unpack('<i', payload[1:])[0]/1000.0
                 # print(f'Quality: {quality}, posZ: {posZ}')
-                self.altitude = self.alpha*posZ + (1-self.alpha)*self.altitude
+                if posZ>0: self.altitude = self.alpha*posZ + (1-self.alpha)*self.altitude
             
             if message_MSP[function_message] == 'MSP2_SENSOR_OPTIC_FLOW':
                 assert payload_length == 9, "Payload length of optic flow is not 12"
                 quality = struct.unpack('<B', payload[:1])[0]
-                speedY = -struct.unpack('<i', payload[1:5])[0]/100.0
-                speedX = -struct.unpack('<i', payload[5:])[0]/100.0
-                # print(f'Quality: {quality}, posX: {posX}, posY: {posY}')
+                speedX = -struct.unpack('<i', payload[1:5])[0]/100.0
+                speedY = -struct.unpack('<i', payload[5:9])[0]/100.0
+                # print(f'Quality: {quality}, speedX: {speedX:.3f}, speedY: {speedY:.3f}')
                 self.velocity = self.alpha*np.array([speedX, speedY]) + (1-self.alpha)*self.velocity
             
             # print(f"Time {time.time()-t0}, Quality: {quality}, Position: {position}")
