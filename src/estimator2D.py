@@ -77,10 +77,10 @@ class Estimator2D:
             self.optical_flow = np.array(self.sensor_data.optical_flow)
 
             self.optical_flow[2] = self.optical_flow[2]*np.cos(angle_vertical)
-            self.optical_flow[:2] *= 2.8*self.optical_flow[2] # experimental calibration
+            self.optical_flow[:2] *= 2*self.optical_flow[2] # experimental calibration
 
-            self.optical_flow[0] -= (self.angular_velocity[1]*self.optical_flow[2] - self.angular_velocity[2]*0.33)
-            self.optical_flow[1] += self.angular_velocity[0]*self.optical_flow[2]
+            self.optical_flow[0] -= (-self.angular_velocity[1]*self.optical_flow[2] +self.angular_velocity[2]*0.33)
+            self.optical_flow[1] -= self.angular_velocity[0]*self.optical_flow[2]
 
             self.kf.update(self.optical_flow[:2])
 

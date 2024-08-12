@@ -25,13 +25,24 @@ class MobileBaseControl:
         self.max_angular = max_angular
 
 
-    def control_velocity(self, marker_position, marker_orientation):
+    def position_tracking(self, target_position, target_orientation):
 
-        theta = R.from_quat(marker_orientation).as_euler('xyz', degrees=False)[2]
-        horizontal_position = marker_position[0:2]
+        euler_orientation = R.from_quat(target_orientation).as_euler('xyz', degrees=False)
+        horizontal_position = target_position[0:2]
         
         command_linear_velocity = self.K_linear*horizontal_position
-        command_angular_velocity = self.K_angular*theta
+        command_angular_velocity = self.K_angular*euler_orientation
+
+        command_linear_velocity = np.clip(command_linear_velocity, -self.max_linear, self.max_linear)
+        command_angular_velocity = np.clip(command_angular_velocity, -self.max_angular, self.max_angular)
+
+        return command_linear_velocity, command_angular_velocity
+    
+
+    def velocity_tracking(self, target_velocity, target_angular_velocity):
+
+        command_linear_velocity = self.K_linear*target_velocity
+        command_angular_velocity = self.K_angular*target_angular_velocity
 
         command_linear_velocity = np.clip(command_linear_velocity, -self.max_linear, self.max_linear)
         command_angular_velocity = np.clip(command_angular_velocity, -self.max_angular, self.max_angular)
