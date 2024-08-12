@@ -47,7 +47,7 @@ class OpticalFlow():
             if message_MSP[function_message] == 'MSP2_SENSOR_OPTIC_FLOW':
                 assert payload_length == 9, "Payload length of optic flow is not 12"
                 quality = struct.unpack('<B', payload[:1])[0]
-                speedX = -struct.unpack('<i', payload[1:5])[0]/100.0
+                speedX = struct.unpack('<i', payload[1:5])[0]/100.0
                 speedY = -struct.unpack('<i', payload[5:9])[0]/100.0
                 # print(f'Quality: {quality}, speedX: {speedX:.3f}, speedY: {speedY:.3f}')
                 self.velocity = self.alpha*np.array([speedX, speedY]) + (1-self.alpha)*self.velocity
@@ -56,3 +56,13 @@ class OpticalFlow():
         else:
             print(function_message, payload)
 
+
+if __name__ == '__main__':
+    import time
+
+    of = OpticalFlow(path_device="/dev/tty.usbserial-0001")
+
+    for _ in range(1000):
+        of.update()
+        print(of.velocity, of.altitude)
+        time.sleep(0.01)
