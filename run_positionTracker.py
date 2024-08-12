@@ -55,29 +55,24 @@ if __name__ == '__main__':
     t0 = time.time()
     while True:
 
-        # ret, frame = marker_pose.cap.read()
-        # if ret: 
-        #     imS = cv2.resize(frame, (960, 540)) 
-        #     cv2.imshow("test", imS)
-
         # Get the position and orientation of the marker
         position, orientation = marker_pose.get_marker_pose()
 
         # Get the desired velocity of the mobile base
-        linear_velocity, angular_velocity = base_controller.control_velocity(position, orientation)
+        command_linear_velocity, command_angular_velocity = base_controller.position_tracking(position, orientation)
+        tracer.SetMotionCommand(linear_vel=command_linear_velocity[0], angular_vel=command_angular_velocity[2])
 
 
         # Print observation and control
         np.set_printoptions(precision=2, suppress=True)
         print(f"Position: {position*100.}, Orientation: {R.from_quat(orientation).as_euler('xyz', degrees=True)}")
-        print(f"Linear velocity: {linear_velocity}, Angular velocity: {(angular_velocity):.2f}")
+        print(f"Linear velocity: {command_linear_velocity}, Angular velocity: {(command_angular_velocity):.2f}")
         print("----")
 
-        tracer.SetMotionCommand(linear_vel=linear_velocity[0], angular_vel=angular_velocity)
 
         # Save data
         times.append(time.time()-t0)
-        base_controls.append([linear_velocity[0], angular_velocity])
+        base_controls.append([command_linear_velocity[0], command_angular_velocity])
         base_states.append([tracer.GetLinearVelocity(), tracer.GetAngularVelocity()])
 
         # Wait for 1 second
