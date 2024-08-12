@@ -33,7 +33,8 @@ class KalmanFilter():
                             [0,     0,  0.5*dT**2,  0],
                             [0,     0,  0,          0.5*dT**2]])*self.sigma_a
         
-        self.R = np.eye(2)*self.sigma_opt
+        # self.R = np.eye(2)*self.sigma_opt
+        self.R = np.array([[self.sigma_opt, 0], [0, 1000]])
 
 
     def predict(self, dT, acceleration):

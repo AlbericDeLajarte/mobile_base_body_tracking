@@ -14,7 +14,7 @@ import time
 class Estimator2D:
     def __init__(self, path_imu: str, path_optical_flow: str) -> None:
 
-        self.kf = KalmanFilter(sigma_a=1.5e-3, sigma_opt=1e-2)
+        self.kf = KalmanFilter(sigma_a=1.5e-3, sigma_opt=2e-3)
 
         self.gravity = np.array([0, 0, 9.81])
 
