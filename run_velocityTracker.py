@@ -10,64 +10,67 @@ import signal
 
 from scipy.spatial.transform import Rotation as R
 
-# import pyagxrobots
+import pyagxrobots
 
 if __name__ == '__main__':
 
     # init estimator and controller
-    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-1110", path_optical_flow="/dev/tty.usbserial-0001")
+    state_estimator = Estimator2D(path_imu="/dev/ttyUSB0", path_optical_flow="/dev/ttyUSB1")
 
-    # tracer = pyagxrobots.pysdkugv.TracerBase()
-    # tracer.EnableCAN()
-    # tracer.EnableCAN()
-    # tracer.EnableCAN()
+    tracer = pyagxrobots.pysdkugv.TracerBase()
+    tracer.EnableCAN()
+    tracer.EnableCAN()
+    tracer.EnableCAN()
 
     # Control parameters
-    K_linear = 1
-    K_angular = 1
+    KP_linear = 1
+    KP_angular = 1
     max_linear = 0.4
     max_angular = 1
 
-    base_controller = MobileBaseControl(K_linear=K_linear, K_angular=K_angular, max_linear=max_linear, max_angular=max_angular)
+    base_controller = MobileBaseControl(KP_linear=KP_linear, KP_angular=KP_angular, 
+                                        max_linear=max_linear, max_angular=max_angular, 
+                                        KI_linear=0.2, KI_angular=1, alpha=0.6)
 
     # Handler to log and exit at the end
     def signal_handler(sig, frame):
         state_estimator.stop()
 
-        # Log
-        with open("log/data_sensor_new_squareXTheta.csv", "w") as f:
-            f.write("Time [s],Acceleration X [m/s^2],Acceleration Y [m/s^2],Acceleration Z [m/s^2],Angular velocity X [rad/s],Angular velocity Y [rad/s],Angular velocity Z [rad/s],Quaternion X,Quaternion Y,Quaternion Z,Quaternion W,Velocity X [m/s],Velocity Y [m/s],Height [m],Position X [m],Position Y [m]\n")
-            for t, acceleration, angular_velocity, quaternion, velocity, position in zip(times, accelerations, angular_velocities, quaternions, velocities, positions):
-                f.write(f"{t},{acceleration[0]},{acceleration[1]},{acceleration[2]},{angular_velocity[0]},{angular_velocity[1]},{angular_velocity[2]},{quaternion[0]},{quaternion[1]},{quaternion[2]},{quaternion[3]},{velocity[0]},{velocity[1]},{velocity[2]},{position[0]},{position[1]}\n")
+        import datetime
+        file_name = datetime.datetime.now().strftime("%m_%d_%Y-%I:%M%p:%S.csv")
+        with open(f"log/{file_name}", "w") as f:
+            f.write("Time [s],State Linear velocity [m/s],State Angular velocity [rad/s],Control Linear velocity [m/s],Control Angular velocity [rad/s]\n")
+
+            for time, base_state, base_control in zip(times, base_states, base_controls):
+                f.write(f"{time}, {base_state[0]}, {base_state[1]}, {base_control[0]}, {base_control[1]}\n")
 
         sys.exit(0)
     # Register hook to log and exit at the end
     signal.signal(signal.SIGINT, signal_handler)
 
-    accelerations = []
-    velocities = []
-    positions = []
-    quaternions = []
-    angular_velocities = []
+    base_states = []
+    base_controls = []
     times = []
-    while state_estimator.time < 100:
+    while state_estimator.time < 1000:
         
-        times.append(state_estimator.time)
-
         # Estimate and control robot
         state_estimator.update_state()
-        command_linear_velocity, command_angular_velocity = base_controller.velocity_tracking(state_estimator.optical_flow[:2], state_estimator.angular_velocity)
-        # tracer.SetMotionCommand(linear_vel=command_linear_velocity[0], angular_vel=command_angular_velocity[2])
+
+        teleop_velocity = np.concatenate(( state_estimator.kf.x[:2], [0.0] ))
+        base_linear_velocity = np.concatenate(( [tracer.GetLinearVelocity()], [0.0, 0.0] ))
+        base_angular_velocity = np.concatenate(( [0.0, 0.0], [tracer.GetAngularVelocity()] ))
+
+        command_linear_velocity, command_angular_velocity = base_controller.velocity_tracking(teleop_velocity, state_estimator.angular_velocity, base_linear_velocity, base_angular_velocity)
+        tracer.SetMotionCommand(linear_vel=command_linear_velocity[0], angular_vel=command_angular_velocity[2])
 
         # Print and log
         np.set_printoptions(precision=3, suppress=True)
         print(f"Time:{state_estimator.time:.2f}, Position: {state_estimator.kf.x[2:4]}, Velocity: {state_estimator.kf.x[:2]}")
 
-        accelerations.append(state_estimator.linear_acceleration)
-        angular_velocities.append(state_estimator.angular_velocity)
-        quaternions.append(state_estimator.quaternion)
-        velocities.append(state_estimator.optical_flow)
-        positions.append(state_estimator.kf.x[2:4])
+        # Save data
+        times.append(state_estimator.time)
+        base_controls.append([command_linear_velocity[0], command_angular_velocity[2]])
+        base_states.append([tracer.GetLinearVelocity(), tracer.GetAngularVelocity()])
 
         time.sleep(0.001)
 

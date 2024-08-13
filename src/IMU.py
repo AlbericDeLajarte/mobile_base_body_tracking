@@ -64,9 +64,11 @@ class IMU():
             struct.unpack('<f', clean_byte(byte_pairs[57:61]) )[0],
             struct.unpack('<f', clean_byte(byte_pairs[61:65]) )[0]
         ])
-        self.quaternion = np.array([
+        new_quaternion = np.array([
             struct.unpack('<f', clean_byte(byte_pairs[69:73]) )[0],
             struct.unpack('<f', clean_byte(byte_pairs[73:77]) )[0],
             struct.unpack('<f', clean_byte(byte_pairs[77:81]) )[0],
             struct.unpack('<f', clean_byte(byte_pairs[65:69]) )[0],
         ])
+
+        if np.abs(np.linalg.norm(new_quaternion)-1)<0.1: self.quaternion=new_quaternion
