@@ -11,10 +11,16 @@ import signal
 
 from scipy.spatial.transform import Rotation as R
 
+# Check list for demo !!
+# - Plug cable, check tty port
+# - Start the server
+# - Start the client, check estimate is correct
+# - Activate tracking
+
 if __name__ == '__main__':
 
     # init estimator and controller
-    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-2110", path_optical_flow="/dev/tty.usbserial-0001")
+    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-1110", path_optical_flow="/dev/tty.usbserial-0001")
     zmq_sender = Sender("tcp://10.103.1.38:5555")
     switch = trackerSwitch(state_estimator)
 
@@ -24,7 +30,7 @@ if __name__ == '__main__':
     max_linear = 0.5
     max_angular = 1
     base_controller = MobileBaseControl(KP_linear=KP_linear, KP_angular=KP_angular, 
-                                        max_linear=max_linear, max_angular=max_angular)
+                                        max_linear=max_linear, max_angular=max_angular, alpha=0.8)
 
     # Handler to log and exit at the end
     def signal_handler(sig, frame):
@@ -56,8 +62,9 @@ if __name__ == '__main__':
         state_estimator.update_state()
         if switch.isTracking:
             target_linear_velocity = np.concatenate((state_estimator.kf.x[:2], np.zeros(1)))
+            # target_position = np.concatenate((state_estimator.kf.x[2:4], np.zeros(1)))
             command_linear_velocity, command_angular_velocity = base_controller.velocity_tracking(target_linear_velocity, state_estimator.angular_velocity)
-            # command_linear_velocity, command_angular_velocity = base_controller.position_tracking(state_estimator.kalman_state.x[2:4], (R.from_quat(state_estimator.quaternion)*switch.zero_orientation).as_quat())
+            # command_linear_velocity, command_angular_velocity = base_controller.position_tracking(target_position, (R.from_quat(state_estimator.quaternion)*switch.zero_orientation).as_quat())
         else:
             command_linear_velocity, command_angular_velocity = np.zeros(3), np.zeros(3)
         zmq_sender.send_command(command_linear_velocity, command_angular_velocity)

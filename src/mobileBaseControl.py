@@ -49,9 +49,8 @@ class MobileBaseControl:
     def position_tracking(self, target_position, target_orientation):
 
         euler_orientation = R.from_quat(target_orientation).as_euler('xyz', degrees=False)
-        horizontal_position = target_position[0:2]
         
-        command_linear_velocity = self.KP_linear*horizontal_position
+        command_linear_velocity = self.KP_linear*target_position    
         command_angular_velocity = self.KP_angular*euler_orientation
 
         command_linear_velocity = np.clip(command_linear_velocity, -self.max_linear, self.max_linear)
