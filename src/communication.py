@@ -43,7 +43,7 @@ class Sender():
         self.socket.send_string(message)
         reply = self.socket.recv_string()
 
-        assert reply == "OK", "Error in communication"
+        assert reply == "OK", "Error in communication, received message: " + reply
 
     def close(self):
         self.socket.close()

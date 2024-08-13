@@ -14,16 +14,16 @@ from scipy.spatial.transform import Rotation as R
 if __name__ == '__main__':
 
     # init estimator and controller
-    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-1110", path_optical_flow="/dev/tty.usbserial-0001")
-    zmq_sender = Sender("tcp://10.10.10/10:5555")
+    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-2110", path_optical_flow="/dev/tty.usbserial-0001")
+    zmq_sender = Sender("tcp://10.103.1.38:5555")
     switch = trackerSwitch(state_estimator)
 
     # Control parameters
-    K_linear = 1
-    K_angular = 1
-    max_linear = 0.4
+    KP_linear = 1
+    KP_angular = 1
+    max_linear = 0.5
     max_angular = 1
-    base_controller = MobileBaseControl(K_linear=K_linear, K_angular=K_angular, 
+    base_controller = MobileBaseControl(KP_linear=KP_linear, KP_angular=KP_angular, 
                                         max_linear=max_linear, max_angular=max_angular)
 
     # Handler to log and exit at the end
@@ -48,22 +48,23 @@ if __name__ == '__main__':
     quaternions = []
     angular_velocities = []
     times = []
-    while state_estimator.time < 100:
+    while state_estimator.time < 1000:
         
         times.append(state_estimator.time)
 
         # Estimate and control robot
         state_estimator.update_state()
         if switch.isTracking:
-            command_linear_velocity, command_angular_velocity = base_controller.velocity_tracking(state_estimator.kalman_state.x[:2], state_estimator.angular_velocity)
-            command_linear_velocity, command_angular_velocity = base_controller.position_tracking(state_estimator.kalman_state.x[2:4], (R.from_quat(state_estimator.quaternion)*switch.zero_orientation).as_quat())
+            target_linear_velocity = np.concatenate((state_estimator.kf.x[:2], np.zeros(1)))
+            command_linear_velocity, command_angular_velocity = base_controller.velocity_tracking(target_linear_velocity, state_estimator.angular_velocity)
+            # command_linear_velocity, command_angular_velocity = base_controller.position_tracking(state_estimator.kalman_state.x[2:4], (R.from_quat(state_estimator.quaternion)*switch.zero_orientation).as_quat())
         else:
             command_linear_velocity, command_angular_velocity = np.zeros(3), np.zeros(3)
         zmq_sender.send_command(command_linear_velocity, command_angular_velocity)
 
         # Print and log
         np.set_printoptions(precision=3, suppress=True)
-        print(f"Time:{state_estimator.time:.2f}, Position: {state_estimator.kf.x[2:4]}, Velocity: {state_estimator.kf.x[:2]}")
+        print(f"Time:{state_estimator.time:.2f}, Position: {state_estimator.kf.x[2:4]}, Velocity: {state_estimator.kf.x[:2]}, Command: {command_linear_velocity[0]:.2f}, {command_angular_velocity[2]:.2f}")
 
         accelerations.append(state_estimator.linear_acceleration)
         angular_velocities.append(state_estimator.angular_velocity)

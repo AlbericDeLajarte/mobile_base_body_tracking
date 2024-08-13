@@ -11,7 +11,7 @@ from scipy.spatial.transform import Rotation as R
 
 import time
 
-import keyboard
+from pynput import keyboard
 
 class Estimator2D:
     def __init__(self, path_imu: str, path_optical_flow: str) -> None:
@@ -124,13 +124,18 @@ class trackerSwitch:
         self.isTracking = False
         self.zero_orientation = R.from_quat(np.array([0, 0, 0, 1]))
 
-        keyboard.on_press_key("q", self.switch_tracker)
+        self.listener = keyboard.Listener(on_press=self.switch_tracker)
+        self.listener.start()
 
 
-    def switch_tracker(self, event):
-        if event.name == self.key:
-            self.isTracking = not self.isTracking
-            self.observer.kf.x = np.zeros(4)
-            self.zero_orientation = R.from_quat(self.observer.quaternion).inv()
+    def switch_tracker(self, key):
+
+        try:
+            if key.char == 'q':
+                self.isTracking = not self.isTracking
+                self.observer.kf.x = np.zeros(4)
+                self.zero_orientation = R.from_quat(self.observer.quaternion).inv()
+        except AttributeError:
+            pass  # Special keys (like arrow keys) don't have a 'char' attribute
 
 
