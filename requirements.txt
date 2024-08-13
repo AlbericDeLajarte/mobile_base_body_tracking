@@ -3,3 +3,5 @@ numpy
 scipy
 pyagxrobots
 typing_extensions==4.12.2
+keyboard
+zmq

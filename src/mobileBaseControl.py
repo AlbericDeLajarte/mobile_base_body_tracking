@@ -72,8 +72,8 @@ class MobileBaseControl:
             self.integral_linear = np.clip(self.integral_linear + (self.target_linear_velocity - current_velocity)*dT, -self.max_linear_integrator, self.max_linear_integrator)
             self.integral_angular = np.clip(self.integral_angular + (self.target_angular_velocity - current_angular_velocity)*dT, -self.max_angular_integrator, self.max_angular_integrator)
         else:
-            self.integral_linear = np.zeros(3)
-            self.integral_angular = np.zeros(3)
+            self.integral_linear = np.zeros_like(target_linear_velocity)
+            self.integral_angular = np.zeros_like(target_angular_velocity)
 
         # Proportional-Integral controller
         command_linear_velocity = self.KP_linear*target_linear_velocity + self.KI_linear*self.integral_linear

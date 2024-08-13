@@ -11,6 +11,8 @@ from scipy.spatial.transform import Rotation as R
 
 import time
 
+import keyboard
+
 class Estimator2D:
     def __init__(self, path_imu: str, path_optical_flow: str) -> None:
 
@@ -112,4 +114,23 @@ def optical_flow_update(path_optical_flow, sensor_data):
             sensor_data.optical_flow[:2] = optical_flow.velocity.tolist()
             sensor_data.optical_flow[2] = optical_flow.altitude
             sensor_data.update_opticalFlow = 1
+
+
+
+class trackerSwitch:
+    def __init__(self, observer, key='X'):
+        self.observer = observer
+        self.key = key
+        self.isTracking = False
+        self.zero_orientation = R.from_quat(np.array([0, 0, 0, 1]))
+
+        keyboard.on_press_key("q", self.switch_tracker)
+
+
+    def switch_tracker(self, event):
+        if event.name == self.key:
+            self.isTracking = not self.isTracking
+            self.observer.kf.x = np.zeros(4)
+            self.zero_orientation = R.from_quat(self.observer.quaternion).inv()
+
 
