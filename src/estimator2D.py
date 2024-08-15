@@ -139,3 +139,15 @@ class trackerSwitch:
             pass  # Special keys (like arrow keys) don't have a 'char' attribute
 
 
+if __name__ == "__main__":
+
+    # init estimator and controller
+    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-110", path_optical_flow="/dev/tty.usbserial-0001")
+
+    for i in range(1000):
+        state_estimator.update_state()
+        np.set_printoptions(precision=3, suppress=True)
+        print(f"Time:{state_estimator.time:.2f}, Position: {state_estimator.kf.x[2:4]}, Velocity: {state_estimator.kf.x[:2]}")
+        time.sleep(0.01)
+
+    state_estimator.stop()
