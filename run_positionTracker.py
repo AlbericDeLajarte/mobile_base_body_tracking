@@ -22,23 +22,25 @@ if __name__ == '__main__':
     tracer.EnableCAN()
 
     # Control parameters
-    K_linear = 3
-    K_angular = 1.5
+    KP_linear = 3
+    KP_angular = 1.5
     max_linear = 0.4
     max_angular = 1
     
     alpha_estimation = 0.5
     alpha_control = 1
 
-    marker_len = 131.1e-3
+    marker_len = 81e-3 #131.1e-3
     base_states = []
     base_controls = []
     times = []
 
     def signal_handler(sig, frame):
+        cv2.destroyAllWindows()
+
         file_name = datetime.datetime.now().strftime("%m_%d_%Y-%I:%M%p:%S.csv")
         with open(f"log/{file_name}", "w") as f:
-            f.write(f"K_linear: {K_linear}, K_angular: {K_angular}, max_linear: {max_linear}, max_angular: {max_angular}, alpha_estimation: {alpha_estimation}, alpha_control: {alpha_control}, marker_len: {marker_len}\n\n")
+            f.write(f"K_linear: {KP_linear}, K_angular: {KP_angular}, max_linear: {max_linear}, max_angular: {max_angular}, alpha_estimation: {alpha_estimation}, alpha_control: {alpha_control}, marker_len: {marker_len}\n\n")
             f.write("Time [s],State Linear velocity [m/s],State Angular velocity [rad/s],Control Linear velocity [m/s],Control Angular velocity [rad/s]\n")
 
             for time, base_state, base_control in zip(times, base_states, base_controls):
@@ -50,7 +52,7 @@ if __name__ == '__main__':
 
     # Create an instance of the MarkerPose class
     marker_pose = MarkerPose(camera_calibration='calibration/calibration_chessboard.yaml', marker_len=marker_len, alpha=alpha_estimation)
-    base_controller = MobileBaseControl(K_linear=K_linear, K_angular=K_angular, max_linear=max_linear, max_angular=max_angular)
+    base_controller = MobileBaseControl(KP_linear=KP_linear, KP_angular=KP_angular, max_linear=max_linear, max_angular=max_angular)
 
     t0 = time.time()
     while True:
@@ -66,7 +68,7 @@ if __name__ == '__main__':
         # Print observation and control
         np.set_printoptions(precision=2, suppress=True)
         print(f"Position: {position*100.}, Orientation: {R.from_quat(orientation).as_euler('xyz', degrees=True)}")
-        print(f"Linear velocity: {command_linear_velocity}, Angular velocity: {(command_angular_velocity):.2f}")
+        print(f"Linear velocity: {command_linear_velocity[0]:.2f}, Angular velocity: {command_angular_velocity[2]:.2f}")
         print("----")
 
 
@@ -77,5 +79,3 @@ if __name__ == '__main__':
 
         # Wait for 1 second
         # time.sleep(0.1)
-
-cv2.destroyAllWindows()
