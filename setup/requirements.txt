@@ -2,6 +2,8 @@ opencv-contrib-python==4.5.4.58
 numpy
 scipy
 pyagxrobots
+wrapt==1.11.2
 typing_extensions==4.12.2
-keyboard
 zmq
+pynput
+pyserial

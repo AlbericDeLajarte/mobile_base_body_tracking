@@ -6,7 +6,6 @@ from src.communication import Receiver
 import numpy as np
 import time
 
-from tqdm import tqdm
 import sys
 import signal
 
@@ -50,6 +49,7 @@ if __name__ == '__main__':
         # Estimate and control robot
         command_linear_velocity, command_angular_velocity = zmq_receiver.get_command()
         tracer.SetMotionCommand(linear_vel=command_linear_velocity[0], angular_vel=command_angular_velocity[2])
+        print(f"Time {tNow:.3f} s, Command linear velocity {command_linear_velocity[0]:.3f} m/s, Command angular velocity {command_angular_velocity[2]:.3f} rad/s")
 
         # Save data
         times.append(tNow)

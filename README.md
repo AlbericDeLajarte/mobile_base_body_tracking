@@ -2,12 +2,14 @@
 
 ## Description
 This repository is used to control the position of a mobile base by following the motion of a human.
-It contains code to track an ArUco marker and a simple linear controller to drive an omniwheel mobile base.
+It contains two demos:
+- `run_markerPositionTracker.py`: To run on the robot computer, will track a marker held by the user to keep the same realtive position and orientation between the robot and user
+- `run_velocityTrackerServer.py` and `run_velocityTrackerClient.py`: The server runs on the robot and the client on the teleoperator's computer. Here the velocity of the teleoperator is estimated with an IMU and optical flow, then sent as commands to the robot
 
 ## Installation
+For both demos:
 ```
 pip install -r requirements.txt
-pip uninstall opencv-python
 ```
 
 ## Calibration
