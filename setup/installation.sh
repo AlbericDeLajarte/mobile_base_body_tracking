@@ -1,3 +1,23 @@
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential \
+    zlib1g-dev \
+    libncurses5-dev \
+    libgdbm-dev \
+    libnss3-dev \
+    libssl-dev \
+    libreadline-dev \
+    libffi-dev \
+    libbz2-dev \
+    libsqlite3-dev \
+    liblzma-dev \
+    libncursesw5-dev \
+    libgdbm-compat-dev \
+    tk-dev \
+    libdb5.3-dev \
+    libexpat1-dev \
+    iptables
+
 # Install pyenv and Python 3.10
 curl https://pyenv.run | bash
 
@@ -6,13 +26,9 @@ echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc
 echo 'eval "$(pyenv init --path)"' >> ~/.bashrc
 echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
 
-exec "$SHELL"
+source ~/.bashrc
 
 pyenv install 3.10.0 && pyenv global 3.10.0
-
-# Create virtual environment
-python venv teleop_venv
-source teleop_venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
