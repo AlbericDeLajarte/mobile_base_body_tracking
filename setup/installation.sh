@@ -3,8 +3,6 @@
 # Update and install necessary packages
 sudo apt-get update
 sudo apt-get install -y \
-    build-essential \
-    zlib1g-dev \
     libncurses5-dev \
     libgdbm-dev \
     libnss3-dev \
@@ -20,7 +18,6 @@ sudo apt-get install -y \
     libdb5.3-dev \
     libexpat1-dev \
     iptables \
-    dhcpcd5
 
 # Install pyenv
 curl https://pyenv.run | bash

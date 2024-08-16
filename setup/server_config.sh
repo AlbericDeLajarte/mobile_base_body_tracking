@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script sets up a Raspberry Pi as a Wi-Fi hotspot
+# This script sets up a Raspberry Pi as a Wi-Fi hotspot using NetworkManager
 
 # Variables
 SSID="TeloPi"
@@ -11,7 +11,7 @@ CHANNEL="7"
 
 # Update and install necessary packages
 apt update
-apt install -y hostapd dnsmasq iptables-persistent
+apt install -y hostapd dnsmasq iptables-persistent network-manager
 
 # Stop services while configuring
 systemctl stop hostapd
@@ -45,15 +45,12 @@ interface=$NET_INTERFACE
 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
 EOL
 
-# Configure static IP for wlan0
-cat >> /etc/dhcpcd.conf <<EOL
-interface $NET_INTERFACE
-static ip_address=$STATIC_IP/24
-nohook wpa_supplicant
-EOL
-
-# Restart dhcpcd to apply IP configuration
-systemctl restart dhcpcd
+# Configure static IP for wlan0 using NetworkManager
+nmcli connection add type wifi ifname $NET_INTERFACE con-name "Hotspot" autoconnect yes ssid $SSID
+nmcli connection modify "Hotspot" 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
+nmcli connection modify "Hotspot" wifi-sec.key-mgmt wpa-psk wifi-sec.psk $PASSWORD
+nmcli connection modify "Hotspot" ipv4.addresses $STATIC_IP/24
+nmcli connection modify "Hotspot" ipv4.gateway $STATIC_IP
 
 # Enable IP routing
 sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
@@ -66,15 +63,15 @@ sh -c "iptables-save > /etc/iptables.ipv4.nat"
 # Ensure iptables rule is restored on boot
 sed -i '$ i\iptables-restore < /etc/iptables.ipv4.nat' /etc/rc.local
 
-# Uncomment if you want to ensure wlan0 is disconnected before setting up hotspot
-# nmcli device disconnect $NET_INTERFACE
-
 # Enable and start the hostapd and dnsmasq services
 systemctl unmask hostapd
 systemctl enable hostapd
 systemctl enable dnsmasq
 systemctl start hostapd
 systemctl start dnsmasq
+
+# Start the NetworkManager connection
+nmcli connection up "Hotspot"
 
 echo "Setup complete. The Raspberry Pi will now reboot."
 
