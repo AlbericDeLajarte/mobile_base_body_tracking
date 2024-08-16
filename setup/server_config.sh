@@ -10,15 +10,15 @@ NET_INTERFACE="wlan0"
 CHANNEL="7"
 
 # Update and install necessary packages
-sudo apt update
-sudo apt install -y hostapd dnsmasq iptables-persistent
+apt update
+apt install -y hostapd dnsmasq iptables-persistent
 
 # Stop services while configuring
-sudo systemctl stop hostapd
-sudo systemctl stop dnsmasq
+systemctl stop hostapd
+systemctl stop dnsmasq
 
 # Configure hostapd
-sudo bash -c "cat > /etc/hostapd/hostapd.conf <<EOL
+cat > /etc/hostapd/hostapd.conf <<EOL
 interface=$NET_INTERFACE
 driver=nl80211
 ssid=$SSID
@@ -33,51 +33,50 @@ wpa_passphrase=$PASSWORD
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
-EOL"
+EOL
 
 # Point hostapd to the configuration file
-sudo sed -i 's|#DAEMON_CONF="|DAEMON_CONF="/etc/hostapd/hostapd.conf|' /etc/default/hostapd
+sed -i 's|#DAEMON_CONF="|DAEMON_CONF="/etc/hostapd/hostapd.conf|' /etc/default/hostapd
 
 # Configure dnsmasq
-sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sudo bash -c "cat > /etc/dnsmasq.conf <<EOL
+mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+cat > /etc/dnsmasq.conf <<EOL
 interface=$NET_INTERFACE
 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
-EOL"
+EOL
 
 # Configure static IP for wlan0
-sudo bash -c "cat >> /etc/dhcpcd.conf <<EOL
+cat >> /etc/dhcpcd.conf <<EOL
 interface $NET_INTERFACE
 static ip_address=$STATIC_IP/24
 nohook wpa_supplicant
-EOL"
+EOL
 
 # Restart dhcpcd to apply IP configuration
-sudo systemctl restart dhcpcd
-
-# Manually set the static IP for wlan0 (if dhcpcd doesn't handle it)
-sudo ifconfig $NET_INTERFACE $STATIC_IP netmask 255.255.255.0
+systemctl restart dhcpcd
 
 # Enable IP routing
-sudo sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
-sudo sysctl -p
+sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
+sysctl -p
 
 # Set up NAT (Network Address Translation)
-sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+sh -c "iptables-save > /etc/iptables.ipv4.nat"
 
 # Ensure iptables rule is restored on boot
-sudo sed -i '$ i\iptables-restore < /etc/iptables.ipv4.nat' /etc/rc.local
+sed -i '$ i\iptables-restore < /etc/iptables.ipv4.nat' /etc/rc.local
 
-# Disconnect wlan0 from any existing Wi-Fi networks
-# sudo nmcli device disconnect $NET_INTERFACE
-echo "Setup complete. The Raspberry Pi will now reboot."
+# Uncomment if you want to ensure wlan0 is disconnected before setting up hotspot
+# nmcli device disconnect $NET_INTERFACE
 
 # Enable and start the hostapd and dnsmasq services
-sudo systemctl unmask hostapd
-sudo systemctl enable hostapd
-sudo systemctl enable dnsmasq
+systemctl unmask hostapd
+systemctl enable hostapd
+systemctl enable dnsmasq
+systemctl start hostapd
+systemctl start dnsmasq
 
+echo "Setup complete. The Raspberry Pi will now reboot."
 
 # Restart the RPi
-sudo reboot
+reboot
