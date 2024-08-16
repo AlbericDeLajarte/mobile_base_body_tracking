@@ -4,7 +4,7 @@
 
 # Variables
 SSID="TeloPi"
-PASSWORD="Ada\$\$tra2029" # Need to escape special characters
+PASSWORD="teleop123" # Need to escape special characters
 STATIC_IP="192.168.4.1"
 NET_INTERFACE="wlan0"
 CHANNEL="7"
