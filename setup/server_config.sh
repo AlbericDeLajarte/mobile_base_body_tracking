@@ -4,7 +4,7 @@
 
 # Variables
 SSID="TeloPi"
-PASSWORD="Ada$$tra2029"
+PASSWORD="Ada\$\$tra2029" # Need to escape special characters
 STATIC_IP="192.168.4.1"
 NET_INTERFACE="wlan0"
 CHANNEL="7"
@@ -71,13 +71,13 @@ sudo sed -i '$ i\iptables-restore < /etc/iptables.ipv4.nat' /etc/rc.local
 
 # Disconnect wlan0 from any existing Wi-Fi networks
 # sudo nmcli device disconnect $NET_INTERFACE
+echo "Setup complete. The Raspberry Pi will now reboot."
 
 # Enable and start the hostapd and dnsmasq services
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl enable dnsmasq
 
-echo "Setup complete. The Raspberry Pi will now reboot."
 
 # Restart the RPi
 sudo reboot
