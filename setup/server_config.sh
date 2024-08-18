@@ -2,6 +2,11 @@
 
 # This script sets up a Raspberry Pi as a Wi-Fi hotspot using NetworkManager
 
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
+# it seems just following this tutorial is enough
+# https://www.raspberrypi.com/tutorials/host-a-hotel-wifi-hotspot/
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
+
 # Variables
 SSID="TeloPi"
 PASSWORD="teleop123" # Need to escape special characters
@@ -47,6 +52,7 @@ nmcli connection add type wifi ifname $NET_INTERFACE con-name "Hotspot" autoconn
 nmcli connection modify "Hotspot" 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
 nmcli connection modify "Hotspot" wifi-sec.key-mgmt wpa-psk wifi-sec.psk $PASSWORD
 nmcli connection modify "Hotspot" ipv4.addresses $STATIC_IP/24
+nmcli connection modify "Hotspot" connection.autoconnect yes connection.autoconnect-priority 100
 
 # Enable IP routing
 sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
@@ -79,7 +85,7 @@ After=network.target hostapd.service
 
 [Service]
 ExecStartPre=/usr/bin/sudo $SCRIPT_DIR/setup_can.sh
-ExecStart=$HOME/.pyenv/shims/python $SCRIPT_PATH
+ExecStart=/home/pi/.pyenv/shims/python $SCRIPT_PATH
 WorkingDirectory=$WORKING_DIR
 StandardOutput=inherit
 StandardError=inherit
