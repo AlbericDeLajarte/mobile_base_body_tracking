@@ -59,10 +59,38 @@ sh -c "iptables-save > /etc/iptables.ipv4.nat"
 # Ensure iptables rule is restored on boot
 sed -i '$ i\iptables-restore < /etc/iptables.ipv4.nat' /etc/rc.local
 
-# Enable and start the hostapd service
+## Configure script to start at power up
+
+# Set the service name and script path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SERVICE_NAME="trackerServer"
+SCRIPT_PATH="$SCRIPT_DIR/../run_velocityTrackerServer.py"
+WORKING_DIR="$SCRIPT_DIR/../"
+
+# Create the systemd service file
+echo "[Unit]
+Description=My Python Script
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 $SCRIPT_PATH
+WorkingDirectory=$WORKING_DIR
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target" | sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null
+
+# Reload the systemd daemon to recognize the new service and enable it
+systemctl daemon-reload
+
+# Enable and start the services
 systemctl unmask hostapd
 systemctl enable hostapd
 systemctl start hostapd
+systemctl enable $SERVICE_NAME.service
 
 # Start the NetworkManager connection
 nmcli connection up "Hotspot"
