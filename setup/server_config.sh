@@ -71,6 +71,8 @@ WORKING_DIR="$(realpath "$SCRIPT_DIR/../")"
 CAN_SETUP="/sbin/ip link set can0 up type can bitrate 500000"
 echo "$USER ALL=(ALL) NOPASSWD: $CAN_SETUP" | sudo EDITOR='tee -a' visudo
 
+chmod +x $SCRIPT_DIR/setup_can.sh
+
 echo "[Unit]
 Description=Server for the velocity tracker
 After=network.target hostapd.service
