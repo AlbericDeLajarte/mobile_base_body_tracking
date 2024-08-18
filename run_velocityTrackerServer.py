@@ -1,4 +1,3 @@
-from src.estimator2D import Estimator2D
 from src.mobileBaseControl import MobileBaseControl
 
 from src.communication import Receiver

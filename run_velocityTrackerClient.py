@@ -5,7 +5,6 @@ from src.mobileBaseControl import MobileBaseControl
 import numpy as np
 import time
 
-from tqdm import tqdm
 import sys
 import signal
 
@@ -20,8 +19,8 @@ from scipy.spatial.transform import Rotation as R
 if __name__ == '__main__':
 
     # init estimator and controller
-    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-1qqqqqqqqqqqq10", path_optical_flow="/dev/tty.usbserial-0001")
-    zmq_sender = Sender("tcp://10.103.1.38:5555")
+    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-1140", path_optical_flow="/dev/tty.usbserial-0001")
+    zmq_sender = Sender("tcp://teleopi.local:5555")
     switch = trackerSwitch(state_estimator)
 
     # Control parameters

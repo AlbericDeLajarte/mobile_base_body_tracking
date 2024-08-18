@@ -64,16 +64,20 @@ sed -i '$ i\iptables-restore < /etc/iptables.ipv4.nat' /etc/rc.local
 # Set the service name and script path
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_NAME="trackerServer"
-SCRIPT_PATH="$SCRIPT_DIR/../run_velocityTrackerServer.py"
-WORKING_DIR="$SCRIPT_DIR/../"
+SCRIPT_PATH="$(realpath "$SCRIPT_DIR/../run_velocityTrackerServer.py")"
+WORKING_DIR="$(realpath "$SCRIPT_DIR/../")"
 
 # Create the systemd service file
+CAN_SETUP="/sbin/ip link set can0 up type can bitrate 500000"
+echo "$USER ALL=(ALL) NOPASSWD: $CAN_SETUP" | sudo EDITOR='tee -a' visudo
+
 echo "[Unit]
-Description=My Python Script
-After=network.target
+Description=Server for the velocity tracker
+After=network.target hostapd.service
 
 [Service]
-ExecStart=/usr/bin/python3 $SCRIPT_PATH
+ExecStartPre=/usr/bin/sudo $SCRIPT_DIR/setup_can.sh
+ExecStart=$HOME/.pyenv/shims/python $SCRIPT_PATH
 WorkingDirectory=$WORKING_DIR
 StandardOutput=inherit
 StandardError=inherit
@@ -95,7 +99,14 @@ systemctl enable $SERVICE_NAME.service
 # Start the NetworkManager connection
 nmcli connection up "Hotspot"
 
+# Make sure dnsmasq is stopped and disabled
+systemctl stop dnsmasq
+systemctl disable dnsmasq
+systemctl mask dnsmasq
+
 echo "Setup complete. The Raspberry Pi will now reboot."
+
+sleep 2
 
 # Restart the RPi
 reboot
