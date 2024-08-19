@@ -2,7 +2,7 @@
 
 # Set the service name and script path
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVICE_NAME="trackerServer"
+SERVICE_NAME="trackerClient"
 SCRIPT_PATH="$(realpath "$SCRIPT_DIR/../run_velocityTrackerClient.py")"
 WORKING_DIR="$(realpath "$SCRIPT_DIR/../")"
 
@@ -24,6 +24,7 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/$SERVICE_NAME.service
 
 # Reload the systemd daemon to recognize the new service and enable it
 systemctl daemon-reload
+systemctl enable $SERVICE_NAME.service
 
 # Restart the RPi
 echo "Setup complete. The Raspberry Pi will now reboot."

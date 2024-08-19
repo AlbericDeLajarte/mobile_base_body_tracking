@@ -53,7 +53,7 @@ if __name__ == '__main__':
     quaternions = []
     angular_velocities = []
     times = []
-    while state_estimator.time < 1000:
+    while True:
         
         times.append(state_estimator.time)
 

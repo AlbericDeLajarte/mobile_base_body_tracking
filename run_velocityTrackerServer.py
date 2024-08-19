@@ -41,7 +41,7 @@ if __name__ == '__main__':
     times = []
     t0 = time.time()
     tNow = 0.0
-    while tNow < 1000:
+    while True:
 
         tNow = time.time() - t0
         
