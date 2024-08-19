@@ -11,8 +11,6 @@ from scipy.spatial.transform import Rotation as R
 
 import time
 
-from pynput import keyboard
-
 class Estimator2D:
     def __init__(self, path_imu: str, path_optical_flow: str) -> None:
 
@@ -118,31 +116,51 @@ def optical_flow_update(path_optical_flow, sensor_data):
 
 
 class trackerSwitch:
-    def __init__(self, observer, key='X'):
+    def __init__(self, observer, key='X', button=2):
+
         self.observer = observer
         self.key = key
+        self.button = button
         self.isTracking = False
         self.zero_orientation = R.from_quat(np.array([0, 0, 0, 1]))
 
-        self.listener = keyboard.Listener(on_press=self.switch_tracker)
-        self.listener.start()
+        try:
+            from pynput import keyboard
+            self.listener = keyboard.Listener(on_press=self.keyboard_tracker)
+            self.listener.start()
 
+        except ImportError:
+            print("Pynput not installed. Using button as switch")
+            from gpiozero import Button
+            button = Button(self.button)
+            button.when_pressed = self.button_tracker_ON
+            button.when_released = self.button_tracker_OFF
 
-    def switch_tracker(self, key):
+    def reset_KF(self):
+        self.observer.kf.x = np.zeros(4)
+        self.zero_orientation = R.from_quat(self.observer.quaternion).inv()
 
+    def button_tracker_OFF(self):
+        self.isTracking = False
+        self.reset_KF()
+
+    def button_tracker_ON(self):
+        self.isTracking = True
+        self.reset_KF()
+
+    def keyboard_tracker(self, key):
         try:
             if key.char == 'q':
                 self.isTracking = not self.isTracking
-                self.observer.kf.x = np.zeros(4)
-                self.zero_orientation = R.from_quat(self.observer.quaternion).inv()
+                self.reset_KF()
         except AttributeError:
-            pass  # Special keys (like arrow keys) don't have a 'char' attribute
+            pass  
 
 
 if __name__ == "__main__":
 
     # init estimator and controller
-    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-110", path_optical_flow="/dev/tty.usbserial-0001")
+    state_estimator = Estimator2D(path_imu="/dev/tty.usbserial-1140", path_optical_flow="/dev/tty.usbserial-0001")
 
     for i in range(1000):
         state_estimator.update_state()

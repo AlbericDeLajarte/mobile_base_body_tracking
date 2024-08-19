@@ -7,3 +7,4 @@ typing_extensions==4.12.2
 zmq
 pynput
 pyserial
+gpiozero
