@@ -124,15 +124,9 @@ class trackerSwitch:
         self._isTracking = False
         self.zero_orientation = R.from_quat(np.array([0, 0, 0, 1]))
 
-        self.type = 'keyboard'
+        self.onRpi = True
 
         try:
-            from pynput import keyboard
-            self.listener = keyboard.Listener(on_press=self.keyboard_tracker)
-            self.listener.start()
-
-        except ImportError:
-            print("Pynput not installed. Using button as switch")
             import gpiod
             
             # Config input
@@ -144,12 +138,21 @@ class trackerSwitch:
             config.request_type = gpiod.line_request.DIRECTION_INPUT
             self.button_line.request(config=config)
 
-            self.type = 'button'
+            print("Using GPIO as input")
+            
+        except:
+            from pynput import keyboard
+
+            self.listener = keyboard.Listener(on_press=self.keyboard_tracker)
+            self.listener.start()
+
+            print("Not on Rpi. Using keyboard as input")
+            self.onRpi = False
 
 
     def isTracking(self):
 
-        if self.type == 'button': 
+        if self.onRpi:
             isTracking = not self.button_line.get_value()
 
             if not self._isTracking and isTracking: self.reset_KF()

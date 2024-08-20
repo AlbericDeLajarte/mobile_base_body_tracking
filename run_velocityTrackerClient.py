@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
         # Estimate and control robot
         state_estimator.update_state()
-        if switch.isTracking:
+        if switch.isTracking():
             target_linear_velocity = np.concatenate((state_estimator.kf.x[:2], np.zeros(1)))
             # target_position = np.concatenate((state_estimator.kf.x[2:4], np.zeros(1)))
             command_linear_velocity, command_angular_velocity = base_controller.velocity_tracking(target_linear_velocity, state_estimator.angular_velocity)
