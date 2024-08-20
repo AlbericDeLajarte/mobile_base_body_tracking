@@ -121,8 +121,10 @@ class trackerSwitch:
         self.observer = observer
         self.key = key
         self.button = button
-        self.isTracking = False
+        self._isTracking = False
         self.zero_orientation = R.from_quat(np.array([0, 0, 0, 1]))
+
+        self.type = 'keyboard'
 
         try:
             from pynput import keyboard
@@ -131,27 +133,42 @@ class trackerSwitch:
 
         except ImportError:
             print("Pynput not installed. Using button as switch")
-            from gpiozero import Button
-            button = Button(self.button)
-            button.when_pressed = self.button_tracker_ON
-            button.when_released = self.button_tracker_OFF
+            import gpiod
+            
+            # Config input
+            chip = gpiod.chip("gpiochip4")
+            self.button_line = chip.get_line(self.button)
+
+            config = gpiod.line_request()
+            config.consumer = "Button"
+            config.request_type = gpiod.line_request.DIRECTION_INPUT
+            self.button_line.request(config=config)
+
+            self.type = 'button'
+
+
+    def isTracking(self):
+
+        if self.type == 'button': 
+            isTracking = not self.button_line.get_value()
+
+            if not self._isTracking and isTracking: self.reset_KF()
+
+            self._isTracking = isTracking
+
+        return self._isTracking
+
+
+
 
     def reset_KF(self):
         self.observer.kf.x = np.zeros(4)
         self.zero_orientation = R.from_quat(self.observer.quaternion).inv()
 
-    def button_tracker_OFF(self):
-        self.isTracking = False
-        self.reset_KF()
-
-    def button_tracker_ON(self):
-        self.isTracking = True
-        self.reset_KF()
-
     def keyboard_tracker(self, key):
         try:
             if key.char == 'q':
-                self.isTracking = not self.isTracking
+                self._isTracking = not self._isTracking
                 self.reset_KF()
         except AttributeError:
             pass  
@@ -169,3 +186,5 @@ if __name__ == "__main__":
         time.sleep(0.01)
 
     state_estimator.stop()
+
+    
